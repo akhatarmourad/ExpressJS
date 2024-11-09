@@ -40,6 +40,40 @@ const mockUsersData = [
     },
 ];
 
+// * Mock projects data
+const projectsMockData = [
+    {
+        id: 1,
+        title: "Driving React Native App",
+        category: "Mobile App",
+        date: "2024"
+    },
+    {
+        id: 2,
+        title: "Building a Web App",
+        category: "Web App",
+        date: "2023"
+    },
+    {
+        id: 3,
+        title: "DevOps GitLab CI/CD",
+        category: "DevOps", 
+        date: "2023"
+    },
+    {
+        id: 4,
+        title: "Data Pipeline",
+        category: "Data",
+        date: "2021"
+    },
+    {
+        id: 5,
+        title: "AI Chatbot",
+        category: "AI",
+        date: "2022"
+    }
+];
+
 
 // * Create Routes
 app.get('/', (request, response) => {
@@ -63,6 +97,7 @@ app.get('/api/v1/courses', (req, res) => {
     ]);
 });
 
+// * Query Parameters
 app.get('/api/v1/users/:id', (request, response) => {
     console.log(request.params);
     const { id } = request.params;
@@ -77,6 +112,25 @@ app.get('/api/v1/users/:id', (request, response) => {
         response.status(200).send({user: getUser});
     }
 });
+
+
+// * Query Strings (for filetring + additional infos about data)
+app.get('/api/v1/projects', (request, response) => {
+    console.log(request.query);
+    const { query: { category, date } } = request;
+
+    if(!category && !date) response.send({projects: projectsMockData});
+    else if(category && date) {
+        const getProjects = projectsMockData.filter(project => project.category === category || project.date === date);
+
+        if(!getProjects.length) response.status(400).send({message: "No projects found !"});
+        else response.status(200).send({projects: getProjects});
+    }
+    else {
+        response.send({projects: projectsMockData});
+    }
+});
+
 
 
 app.listen(PORT, () => {
