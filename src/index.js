@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 
 const app = express();
 app.use(express.json());
@@ -160,6 +160,25 @@ app.put('/api/v1/projects/:id', (request, response) => {
         }
     }
 });
+
+// * PATCH Request : Partially updating a resource, modifying only specified fields
+app.patch('/api/v1/projects/:id', (request, response) => {
+    const { body, params: { id } } = request;
+    const parsedId = parseInt(id);
+
+    if(isNaN(parsedId)) return response.status(400).send({error: "Bad Request !"});
+    else {
+        const getProjectIndex = projectsMockData.findIndex(project => project.id === parsedId);
+        if(getProjectIndex === - 1) return response.status(400).send({message: "No Project Found !"});
+        else {
+            projectsMockData[getProjectIndex] = { ...projectsMockData[getProjectIndex], ...body };
+            return response.status(200).send({data: projectsMockData[getProjectIndex]});
+        }
+    }
+});
+
+// * DELETE Request : Deleting a resource
+app.delete('/api/v1/projects/:id', (request, response) => {});
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
