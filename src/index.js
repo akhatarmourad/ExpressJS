@@ -178,7 +178,20 @@ app.patch('/api/v1/projects/:id', (request, response) => {
 });
 
 // * DELETE Request : Deleting a resource
-app.delete('/api/v1/projects/:id', (request, response) => {});
+app.delete('/api/v1/projects/:id', (request, response) => {
+    const { params: { id } } = request;
+    const parsedId = parseInt(id);
+
+    if(isNaN(parsedId)) return response.status(400).send({error: "Bad Request !"});
+    else {
+        const getProject = projectsMockData.find(project => project.id === parsedId);
+        if(!getProject) return response.status(400).sedn({message: "Project not found !"});
+        else {
+            projectsMockData = projectsMockData.filter(project => project.id !== parsedId);
+            return response.status(200).send({data: getProject});
+        }
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
