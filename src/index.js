@@ -1,6 +1,7 @@
 import express from "express";
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 7000;
 
 // * Mock users data
@@ -129,6 +130,18 @@ app.get('/api/v1/projects', (request, response) => {
     else {
         response.send({projects: projectsMockData});
     }
+});
+
+// * POST request : Create new resource on server
+app.post('/api/v1/courses', (request, response) => {
+
+    const { body } = request;
+    const id = projectsMockData[projectsMockData.length - 1].id + 1;
+
+    const newProject = {id: id, ...body};
+    projectsMockData.push(newProject);
+
+    response.status(201).send({message: "POST request received !", data: newProject});
 });
 
 
