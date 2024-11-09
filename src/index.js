@@ -144,7 +144,22 @@ app.post('/api/v1/courses', (request, response) => {
     response.status(201).send({message: "POST request received !", data: newProject});
 });
 
+// * PUT request : Completely replacing a resource with a new one
+app.put('/api/v1/projects/:id', (request, response) => {
+    const { body, params: { id } } = request;
+    const parsedId = parseInt(id);
 
+    if(isNaN(parsedId)) return response.status(400).send({error: "Bad request, Invalied Parameters !"});
+    else {
+        const getProjectIndex = projectsMockData.findIndex(project => project.id === parsedId);
+
+        if(getProjectIndex === - 1) return response.status(400).send({message: "Project not found !"});
+        else {
+            projectsMockData[getProjectIndex] = {id: parsedId, ...body};
+            return response.status(200).send({data: projectsMockData[getProjectIndex]});
+        }
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
