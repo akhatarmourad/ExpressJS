@@ -4,6 +4,45 @@ const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 7000;
 
+
+// * Middleware functions
+const loginMiddleware = (request, response, next) => {
+    console.log(`Method : ${request.method} | URL : ${request.url}`);
+    next();
+}
+
+const logoutMiddleware = (request, response, next) => {
+    console.log(`Specific Middleware | Method : ${request.method} | URL : ${request.url}`);
+    next();
+}
+
+const customMiddleware = (request, response, next) => {
+    console.log(`Custom Middleware`);
+}
+
+
+// * Use that middleware globally
+app.use(loginMiddleware);
+
+// * Use that middlewareS only for that specific route
+app.use('/api/v1/logout', logoutMiddleware, customMiddleware);
+
+// * Middleware to handle Project Index
+const handleProjectIndexById = (request, response, next) => {
+    const { params: { id } } = request;
+    const parsedId = parseInt(id);
+
+    if(isNaN(parsedId)) return response.status(400).send({error: "Bad Request !"});
+    else {
+        const getProjectIndex = projectsMockData.findIndex(project => project.id === parsedId);
+        if(getProjectIndex === - 1) return response.status(400).send({message: "No Project Found !"});
+        else {
+            request.projectIndex = getProjectIndex;
+            next();
+        }
+    }
+}
+
 // * Mock users data
 const mockUsersData = [
     {
@@ -42,7 +81,7 @@ const mockUsersData = [
 ];
 
 // * Mock projects data
-const projectsMockData = [
+let projectsMockData = [
     {
         id: 1,
         title: "Driving React Native App",
@@ -75,9 +114,8 @@ const projectsMockData = [
     }
 ];
 
-
 // * Create Routes
-app.get('/', (request, response) => {
+app.get('/', loginMiddleware, (request, response) => {
     response.status(201).send({message: "Hello World from Express JS!"});
 });
 
@@ -145,20 +183,12 @@ app.post('/api/v1/courses', (request, response) => {
 });
 
 // * PUT request : Completely replacing a resource with a new one
-app.put('/api/v1/projects/:id', (request, response) => {
-    const { body, params: { id } } = request;
+app.put('/api/v1/projects/:id', handleProjectIndexById, (request, response) => {
+    const { body, params: { id }, projectIndex } = request;
     const parsedId = parseInt(id);
 
-    if(isNaN(parsedId)) return response.status(400).send({error: "Bad request, Invalied Parameters !"});
-    else {
-        const getProjectIndex = projectsMockData.findIndex(project => project.id === parsedId);
-
-        if(getProjectIndex === - 1) return response.status(400).send({message: "Project not found !"});
-        else {
-            projectsMockData[getProjectIndex] = {id: parsedId, ...body};
-            return response.status(200).send({data: projectsMockData[getProjectIndex]});
-        }
-    }
+    projectsMockData[projectIndex] = {id: parsedId, ...body};
+    return response.status(200).send({data: projectsMockData[projectIndex]});
 });
 
 // * PATCH Request : Partially updating a resource, modifying only specified fields
@@ -193,6 +223,8 @@ app.delete('/api/v1/projects/:id', (request, response) => {
     }
 });
 
+
+// * Express Server Listening on Local Host
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
