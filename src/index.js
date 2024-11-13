@@ -1,4 +1,6 @@
-import express, { response } from "express";
+import express from "express";
+import { query, validationResult, body, matchedData, checkSchema } from "express-validator";
+import { createProjectValidationSchema } from "./utils/validationSchema.mjs";
 
 const app = express();
 app.use(express.json());
@@ -119,7 +121,10 @@ app.get('/', loginMiddleware, (request, response) => {
     response.status(201).send({message: "Hello World from Express JS!"});
 });
 
-app.get('/api/v1/courses', (req, res) => {
+app.get('/api/v1/courses', query("filter").isString().notEmpty().isLength({min: 4, max: 10}).withMessage(''), (request, res) => {
+    const result = validationResult(request);
+    console.log(result);
+
     res.status(200).send([
         {
             title: "NoSQL with MongoDB",
@@ -171,19 +176,39 @@ app.get('/api/v1/projects', (request, response) => {
 });
 
 // * POST request : Create new resource on server
-app.post('/api/v1/courses', (request, response) => {
+app.post('/api/v1/projects', [
+        body("title").notEmpty().withMessage("Should not be mepty")
+        .isLength({min: 8, max: 16}).withMessage("length between 8 & 16")
+        .isString().withMessage("Should be a string"),
 
-    const { body } = request;
-    const id = projectsMockData[projectsMockData.length - 1].id + 1;
+        body("category").notEmpty().withMessage("Required")
+        .isString().withMessage("Should be text")
+        .isLength({min: 5, max: 16}).withMessage("5 < length < 16") 
+    ],
+        (request, response) => {
 
-    const newProject = {id: id, ...body};
-    projectsMockData.push(newProject);
+    const result = validationResult(request);
+    console.log(result);
 
-    response.status(201).send({message: "POST request received !", data: newProject});
+    const validData = matchedData(request);
+    console.log(validData);
+
+    if(!result.isEmpty()) {
+        return response.status(400).send({errors: result.array()});
+    }
+    else {
+        const { body } = request;
+        const id = projectsMockData[projectsMockData.length - 1].id + 1;
+
+        const newProject = {id: id, ...validData};
+        projectsMockData.push(newProject);
+
+        response.status(201).send({message: "POST request received !", data: newProject});
+    }
 });
 
 // * PUT request : Completely replacing a resource with a new one
-app.put('/api/v1/projects/:id', handleProjectIndexById, (request, response) => {
+app.put('/api/v1/projects/:id', checkSchema(createProjectValidationSchema), handleProjectIndexById, (request, response) => {
     const { body, params: { id }, projectIndex } = request;
     const parsedId = parseInt(id);
 
