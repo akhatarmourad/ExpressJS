@@ -2,16 +2,17 @@ import express from "express";
 import { query, validationResult, body, matchedData, checkSchema } from "express-validator";
 import { createProjectValidationSchema } from "./utils/validationSchema.mjs";
 import { mockUsersData, projectsMockData } from "./utils/constants.js";
-import { getAllUsers } from "./routes/userRouter.mjs";
+import { getAllUsers, getSignedInCookies } from "./routes/userRouter.mjs";
 import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(express.json());
-app.use(cookieParser());
+app.use(cookieParser("Secret_Key"));
 const PORT = process.env.PORT || 7000;
 
 // * Call users endpoint router
 app.use(getAllUsers);
+app.use(getSignedInCookies);
 
 // * Middleware functions
 const loginMiddleware = (request, response, next) => {
@@ -54,7 +55,8 @@ const handleProjectIndexById = (request, response, next) => {
 
 // * Create Routes
 app.get('/', loginMiddleware, (request, response) => {
-    response.status(201).send({message: "Hello World from Express JS!"});
+    request.cookie("singed-cookie", "Signed In Cookies Data goes here...", { maxAge: 30000, signed: true });
+    return response.status(201).send({message: "Hello World from Express JS!"});
 });
 
 app.get('/api/v1/courses', query("filter").isString().notEmpty().isLength({min: 4, max: 10}).withMessage(''), (request, res) => {

@@ -13,3 +13,8 @@ export const getAllUsers = userRouter.get('/api/v1/users', async (request, respo
 
     return response.status(400).send({message: "Users API is working ! But cookies don't !"});
 });
+
+
+export const getSignedInCookies = userRouter.get('/get-cookies', (request, response) => {
+    console.log(request.signedCookies);
+});
