@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { json, Router } from 'express';
 
 export const userRouter = Router();
 
@@ -17,4 +17,17 @@ export const getAllUsers = userRouter.get('/api/v1/users', async (request, respo
 
 export const getSignedInCookies = userRouter.get('/get-cookies', (request, response) => {
     console.log(request.signedCookies);
+
+    console.log(request.session);
+    console.log(request.session.id);
+
+    request.sessionStore.get(request.session.id, (error, sessionData) => {
+        if(error) {
+            console.log('Session does not exist !');
+            throw error;
+        }
+        else {
+            console.log(`Session Data : ${sessionData}`)
+        }
+    })
 });

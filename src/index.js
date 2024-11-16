@@ -4,10 +4,19 @@ import { createProjectValidationSchema } from "./utils/validationSchema.mjs";
 import { mockUsersData, projectsMockData } from "./utils/constants.js";
 import { getAllUsers, getSignedInCookies } from "./routes/userRouter.mjs";
 import cookieParser from "cookie-parser";
+import session from "express-session";
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser("Secret_Key"));
+app.use(session({
+    secret: "expressCookieSessionSecretKey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 1000 * 24 * 60 * 3600,
+    }
+}));
 const PORT = process.env.PORT || 7000;
 
 // * Call users endpoint router
@@ -55,7 +64,12 @@ const handleProjectIndexById = (request, response, next) => {
 
 // * Create Routes
 app.get('/', loginMiddleware, (request, response) => {
-    request.cookie("singed-cookie", "Signed In Cookies Data goes here...", { maxAge: 30000, signed: true });
+    // response.cookie("singed-cookie", "Signed In Cookies Data goes here...", { maxAge: 30000, signed: true });
+    console.log(request.session);
+    console.log(request.session.id);
+
+    request.session.visited = true;
+
     return response.status(201).send({message: "Hello World from Express JS!"});
 });
 
